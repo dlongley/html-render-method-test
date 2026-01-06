@@ -73,6 +73,7 @@
                 'head > script[name="credential"]').innerHTML);
               document.querySelector('#content').innerHTML =
                 JSON.stringify(credential, null, 2);
+              // demonstrate blocked network access
               fetch('./index.html').catch(e => {
                 console.log('network access intentionally blocked', e);
               });
