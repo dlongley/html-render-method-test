@@ -18,6 +18,7 @@ export async function render({
   const iframe = document.createElement('iframe');
   // permissions TBD
   iframe.sandbox = 'allow-scripts allow-modals';
+  iframe.setAttribute('csp', `connect-src 'none'`);
   iframe.onload = () => {
     // create a MessageChannel; transfer one port to the iframe
     const channel = new MessageChannel();
