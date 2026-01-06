@@ -74,7 +74,9 @@
               document.querySelector('#content').innerHTML =
                 JSON.stringify(credential, null, 2);
               // demonstrate blocked network access
-              fetch('./index.html').catch(e => {
+              fetch('./index.html').then(result => {
+                console.error('fetch not blocked', result);
+              }).catch(e => {
                 console.log('network access intentionally blocked', e);
               });
               setTimeout(() => {
