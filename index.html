@@ -3,7 +3,30 @@
     <script type="module">
       import {render} from './render.js';
 
-      document.addEventListener('DOMContentLoaded', async event => {
+      let useButton = false;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const button = document.querySelector('#load');
+
+        // skip button if specified
+        const searchParams = new URLSearchParams(window.location.search);
+        useButton = searchParams.get('button') !== 'false';
+        if(!useButton) {
+          button.style.display = 'none';
+          doRender().catch(() => {});
+          return;
+        }
+
+        // use button interface
+        const loading = document.querySelector('#loading');
+        button.addEventListener('click', () => {
+          button.style.display = 'none';
+          loading.style.display = 'block';
+          doRender().catch(() => {});
+        });
+      });
+
+      async function doRender() {
         const credential = {
           '@context': [
             'https://www.w3.org/ns/credentials/v2',
@@ -50,9 +73,12 @@
                 'head > script[name="credential"]').innerHTML);
               document.querySelector('#content').innerHTML =
                 JSON.stringify(credential, null, 2);
-              window.renderMethodReady();
+              setTimeout(() => {
+                window.renderMethodReady()
+              }, ${useButton ? 2000 : 0});
             <\/script>
             <div>
+              Rendered Credential:
               <pre id="content"></pre>
             </div>
           </div>`;
@@ -61,6 +87,9 @@
           renderProperty: renderMethod.renderProperty,
           renderMethodReady() {
             console.log('rendering ready');
+            const loading = document.querySelector('#loading');
+            loading.style.display = 'none';
+            iframe.style.display = 'block';
           },
           template
         });
@@ -68,12 +97,21 @@
         for(const key in style) {
           iframe.style[key] = style[key];
         }
-        document.querySelector('#display').appendChild(iframe);
-      });
+        iframe.style.display = 'none';
+        const display = document.querySelector('#display');
+        display.appendChild(iframe);
+      }
     </script>
   </head>
   <body>
     <div>HTML Render Method Test</div>
-    <div id="display"></div>
+    <div id="display">
+      <button id="load">
+        Render
+      </button>
+      <div id="loading" style="display: none">
+        Waiting 2 seconds to demonstrate async capability...
+      </div>
+    </div>
   </body>
 </html>
