@@ -69,10 +69,15 @@
           <div>
             <script>
               console.log('running template render script');
+
+              // display credential as JSON as an example renderer; anything
+              // could be done here instead, including mustache/other-style
+              // template processing to generate the HTML for display
               const credential = JSON.parse(document.querySelector(
                 'head > script[name="credential"]').innerHTML);
               document.querySelector('#content').innerHTML =
                 JSON.stringify(credential, null, 2);
+
               // demonstrate blocked network access
               fetch('./index.html').then(result => {
                 console.error('fetch not blocked', result);
