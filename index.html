@@ -122,9 +122,11 @@
                 window.renderMethodReady()
               }, ${useButton ? 2000 : 0});
             <\/script>
+            <h1 id="credentialSubject-name"></h1>
+            <p>Issued by: <span id="issuer-name"></span></p>
             <div>
-              Rendered Credential:
-              <pre id="content"></pre>
+              <label for="content">Selectively Disclosed Credential:</label>
+              <div><textarea id="content"></textarea></div>
             </div>
             <div>
               If top HTML csp uses "content-security-policy: frame-src 'none'"
