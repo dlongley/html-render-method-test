@@ -18,7 +18,10 @@ export async function render({
   const iframe = document.createElement('iframe');
   // permissions TBD
   iframe.sandbox = 'allow-scripts allow-modals';
-  // block all network access
+  // block all network access in browsers that support `iframe.csp`; other
+  // browsers will use the meta tag in the iframe HTML which does not appear
+  // to be changeable by JavaScript once set (prevents change of the policy
+  // by a template even if `iframe.csp` does not work)
   iframe.setAttribute('csp', `connect-src 'none'`);
   iframe.onload = () => {
     // create a MessageChannel; transfer one port to the iframe
@@ -54,6 +57,7 @@ export async function render({
       params: [{credential, template}]
     });
   };
+
   // start up the iframe
   iframe.srcdoc = SRCDOC;
   return {iframe};
@@ -62,7 +66,9 @@ export async function render({
 const SRCDOC = `
 <html>
   <head>
+    <meta http-equiv="content-security-policy" content="connect-src 'none'">
     <script>
+// bootstrap renderer
 window.addEventListener('message', event => {
   const {data: message, ports} = event;
   const port = ports?.[0];

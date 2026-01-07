@@ -1,5 +1,6 @@
 <html>
   <head>
+    <meta http-equiv="content-security-policy" content="frame-src 'none'">
     <script type="module">
       import {render} from './render.js';
 
@@ -94,8 +95,7 @@
             </div>
             <div>
               If top HTML csp uses "content-security-policy: frame-src 'none'"
-              then this link will be blocked (github pages does not do this,
-              but it can be done with a standard HTTP server). This approach
+              then this link will be blocked. See "meta" tag. This approach
               will block the request entirely, i.e., it won't hit the server
               at all.
               <a href="${window.location.href}?exfiltrate=false">
