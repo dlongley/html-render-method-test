@@ -129,11 +129,13 @@
               <div><textarea id="content"></textarea></div>
             </div>
             <div>
-              If top HTML csp uses "content-security-policy: frame-src 'none'"
-              then this link will be blocked. See "meta" tag. This approach
-              will block the request entirely, i.e., it won't hit the server
-              at all.
-              <a href="${window.location.href}?exfiltrate=false">
+              The outer/Wallet HTML uses
+              <abbr title="Content-Security-Policy">CSP</abbr> set in its
+              <code>&lt;meta&gt;</code> tag to prevent the use of an
+              <code>src</code> attribute being used (i.e., "frame-src 'none'").
+              Consequently, clicking the following link will result in an error
+              (i.e., it won't hit the server at all):
+              <a href="https://example.com/link-blocked">
                 Link blocked
               </a>
             </div>
