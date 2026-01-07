@@ -1,6 +1,22 @@
 <html>
   <head>
     <meta http-equiv="content-security-policy" content="frame-src 'none'">
+    <style>
+      .flex-container {
+        display: flex;
+        /* Optional: Adds space between the items */
+        gap: 20px;
+      }
+
+      .column-item {
+        /* Items will grow to fill equal available horizontal space */
+        flex: 1;
+        /* Add other styling */
+        padding: 15px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+      }
+    </style>
     <script type="module">
       import {render} from './render.js';
 
@@ -26,44 +42,53 @@
           doRender().catch(() => {});
         });
       });
+ 
+      const credential = {
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          'https://www.w3.org/ns/credentials/examples/v2'
+        ],
+        type: ['VerifiableCredential', 'NameCredential'],
+        issuer: {
+          id: 'did:example:1234',
+          name: 'The Issuer',
+        },
+        credentialSubject: {
+          name: 'Example Name',
+          notRendered: 'should not appear'
+        },
+        renderMethod: {
+          type: 'TemplateRenderMethod',
+          renderEngine: 'html',
+          renderProperty: [
+            '/issuer/name',
+            '/credentialSubject/name'
+          ],
+          template: {
+            id:
+              'https://test.example/credential-templates/NameCredential.html',
+            mediaType: 'text/html',
+            digestMultibase:
+              'zQmerWC85Wg6wFl9znFCwYxApG270iEu5h6JqWAPdhyxz2dR'
+          },
+          outputPreference: {
+            mode: ['visual', 'audio'],
+            mediaType: 'application/html',
+            // FIXME: TBD
+            style: {width: '800px', height: '800px'}
+          }
+        }
+      };
+
+      const fullCredentialAsString = JSON.stringify(credential, null, 2);
+      const fullCredentialTextarea =
+        document.querySelector('#fullCredential');
+      fullCredentialTextarea.innerHTML = fullCredentialAsString;
+      fullCredentialTextarea.style.width = '100%';
+      fullCredentialTextarea.style.height =
+        fullCredentialAsString.split('\n').length - 1 + 'rem';
 
       async function doRender() {
-        const credential = {
-          '@context': [
-            'https://www.w3.org/ns/credentials/v2',
-            'https://www.w3.org/ns/credentials/examples/v2'
-          ],
-          type: ['VerifiableCredential', 'NameCredential'],
-          issuer: {
-            id: 'did:example:1234',
-            name: 'The Issuer',
-          },
-          credentialSubject: {
-            name: 'Example Name',
-            notRendered: 'should not appear'
-          },
-          renderMethod: {
-            type: 'TemplateRenderMethod',
-            renderEngine: 'html',
-            renderProperty: [
-              '/issuer/name',
-              '/credentialSubject/name'
-            ],
-            template: {
-              id:
-                'https://test.example/credential-templates/NameCredential.html',
-              mediaType: 'text/html',
-              digestMultibase:
-                'zQmerWC85Wg6wFl9znFCwYxApG270iEu5h6JqWAPdhyxz2dR'
-            },
-            outputPreference: {
-              mode: ['visual', 'audio'],
-              mediaType: 'application/html',
-              // FIXME: TBD
-              style: {width: '800px', height: '800px'}
-            }
-          }
-        };
         const renderMethod = credential.renderMethod;
         // FIXME: dereference template from `renderMethod.id`
         const template = `
@@ -76,8 +101,16 @@
               // template processing to generate the HTML for display
               const credential = JSON.parse(document.querySelector(
                 'head > script[name="credential"]').innerHTML);
-              document.querySelector('#content').innerHTML =
-                JSON.stringify(credential, null, 2);
+              const contentDiv = document.querySelector('#content');
+              const credentialAsString = JSON.stringify(credential, null, 2);
+              contentDiv.innerHTML = credentialAsString;
+              contentDiv.style.width = '100%';
+              contentDiv.style.height = credentialAsString.split('\\n').length - 1 + 'rem';
+
+              document.querySelector('#credentialSubject-name').innerText =
+                credential.credentialSubject.name;
+              document.querySelector('#issuer-name').innerText =
+                credential.issuer.name;
 
               // demonstrate blocked network access
               fetch('./index.html').then(result => {
@@ -126,13 +159,36 @@
     </script>
   </head>
   <body>
-    <div>HTML Render Method Test</div>
-    <div id="display">
-      <button id="load">
-        Render
-      </button>
-      <div id="loading" style="display: none">
-        Waiting 2 seconds to demonstrate async capability...
+    <h1>HTML Render Method Test</h1>
+    <p>This page would live inside a Wallet (or other Verifiable Credential
+      rendering client).
+    </p>
+
+    <div class="flex-container">
+      <div class="column-item">
+        <h2>Raw/Complete Verifiable Credential</h2>
+        <p>
+          Below is the "raw" Credential data prior to being selectively disclosed
+          and rendered by the iframe (to the right):
+        </p>
+        <textarea id="fullCredential"></textarea>
+      </div>
+      <div class="column-item">
+        <h2>Rendered Credential (in a restricted <code>iframe</code>)</h2>
+        <p>
+          Below is the rendered Credential after selective disclosure and
+          rendering via the HTML Render Method within a sandboxed
+          <code>iframe</code>:
+        </p>
+
+        <div id="display">
+          <button id="load">
+            Render
+          </button>
+          <div id="loading" style="display: none">
+            Waiting 2 seconds to demonstrate async capability...
+          </div>
+        </div>
       </div>
     </div>
   </body>
