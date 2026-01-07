@@ -21,3 +21,12 @@ graph TD
         end
     end
 ```
+
+## Demo Components
+
+* index.html - the Wallet/host rendering HTML page
+  - has access to _complete_ Verifiable Credential
+  - creates `<iframe>` and sets `srcdoc=""` on it to the "rendering runtime"
+* pointer.js - minimal JSON Pointer parser for handling `renderProperty`
+* render.js - library to create the `<iframe>`; contains the test template code
+* select.js - does the selective disclosure using `pointer.js` lookups
