@@ -92,17 +92,28 @@
               Rendered Credential:
               <pre id="content"></pre>
             </div>
+            <div>
+              If top HTML csp uses "content-security-policy: frame-src 'none'"
+              then this link will be blocked (github pages does not do this,
+              but it can be done with a standard HTTP server). This approach
+              will block the request entirely, i.e., it won't hit the server
+              at all.
+              <a href="${window.location.href}?exfiltrate=false">
+                Link blocked
+              </a>
+            </div>
           </div>`;
+
         const {iframe} = await render({
           credential,
           renderProperty: renderMethod.renderProperty,
+          template,
           renderMethodReady() {
             console.log('rendering ready');
             const loading = document.querySelector('#loading');
             loading.style.display = 'none';
             iframe.style.display = 'block';
-          },
-          template
+          }
         });
         const {style} = renderMethod.outputPreference;
         for(const key in style) {
