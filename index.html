@@ -135,9 +135,16 @@
               <code>src</code> attribute being used (i.e., "frame-src 'none'").
               Consequently, clicking the following link will result in an error
               (i.e., it won't hit the server at all):
-              <a href="https://example.com/link-blocked">
-                Link blocked
-              </a>
+              <ul>
+                <li><a href="https://example.com/link-blocked">
+                  Remote Link (should be blocked)</a>
+                </li>
+                <li>
+                  <a href="${window.location.href}/?exfiltration=attempt">
+                    Local Link (should be blocked)
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>`;
 
