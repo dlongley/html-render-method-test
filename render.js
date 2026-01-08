@@ -30,114 +30,54 @@ export async function render({
     const channel = new MessageChannel();
     // start message queue so messages won't be lost while iframe loads
     channel.port1.start();
-    // do we need any feedback from the iframe? perhaps when the template
-    // is ready:
-    channel.port1.onmessage = event => {
-      const {jsonrpc, method, params} = event.data;
-      if(!(jsonrpc === '2.0' &&
-        typeof method === 'string' &&
-        Array.isArray(params))) {
-        throw new Error('Unknown message format.');
-      }
-      if(method === 'renderMethodReady') {
-        renderMethodReady?.();
+    // handle `ready` message
+    channel.port1.onmessage = function ready(event) {
+      if(event.data !== 'ready') {
         return;
       }
-      throw new Error(`Unknown RPC method "${method}".`);
+      channel.port1.onmessage = undefined;
+      renderMethodReady?.();
     };
-
-    // message name "start" TBD; send `port2` to iframe for comms
+    // send "start" message; send `port2` to iframe for return communication
     iframe.contentWindow.postMessage('start', '*', [channel.port2]);
-
-    // tell the iframe to render the template
-    channel.port1.postMessage({
-      // message format TBD
-      jsonrpc: '2.0',
-      id: crypto.randomUUID(),
-      method: 'render',
-      // 'template' is fully resolved
-      params: [{credential, template}]
-    });
   };
 
   // start up the iframe
-  iframe.srcdoc = SRCDOC;
+  iframe.srcdoc =
+    `<html>
+      <head>
+        <meta http-equiv="content-security-policy" content="connect-src 'none'">
+        <script
+          name="credential"
+          type="application/vc">${JSON.stringify(credential, null, 2)}</script>
+        <script>
+          // add promise that will resolve to the communication port from
+          // the parent window
+          const portPromise = new Promise(resolve => {
+            window.addEventListener('message', function start(event) {
+              const {data: message, ports} = event;
+              const port = ports?.[0];
+              if(!(message === 'start' && port)) {
+                // ignore unknown message
+                return;
+              };
+              window.removeEventListener('message', start);
+              resolve(port);
+            });
+          });
+
+          // attach a function to the window for the template to call when
+          // it's "ready" that will send a message to the parent so the
+          // parent can decide when to show the iframe
+          window.renderMethodReady = function() {
+            portPromise.then(port => port.postMessage('ready'));
+          };
+        </script>
+      </head>
+
+      <body>
+        ${template}
+      </body>
+    </html>`;
   return {iframe};
 }
-
-const SRCDOC = `
-<html>
-  <head>
-    <meta http-equiv="content-security-policy" content="connect-src 'none'">
-    <script>
-// bootstrap renderer
-window.addEventListener('message', event => {
-  const {data: message, ports} = event;
-  const port = ports?.[0];
-  if(!(message === 'start' && port)) {
-    // ignore unknown message
-    return;
-  };
-
-  // we might want to attach a function to the window for the
-  // template to call when it's "ready" that will send a message to
-  // the parent so the parent can decide to show the iframe or not
-  if(!window.renderMethodReady) {
-    window.renderMethodReady = function() {
-      port.postMessage({
-        jsonrpc: '2.0',
-        // use a different method name for the other end?
-        method: 'renderMethodReady',
-        params: []
-      });
-    };
-  }
-
-  // start message queue for channel port
-  port.start();
-  // handle messages from parent
-  port.onmessage = event => {
-    const {jsonrpc, method, params} = event.data;
-    if(!(jsonrpc === '2.0' &&
-      typeof method === 'string' &&
-      Array.isArray(params))) {
-      throw new Error('Unknown message format.');
-    }
-    const [options] = params;
-    if(method === 'render') {
-      render(options);
-      return;
-    }
-    throw new Error(\`Unknown RPC method "\${method}".\`);
-  };
-});
-
-function render({credential, template} = {}) {
-  if(!(credential && typeof credential === 'object')) {
-    throw new TypeError('"credential" must be an object.');
-  }
-  if(!(template && typeof template === 'string')) {
-    throw new TypeError('"template" must be a string.');
-  }
-  console.log('injecting');
-
-  // inject credential into HTML as a script tag
-  const script = document.createElement('script');
-  // FIXME: use "name" or "id"?
-  script.setAttribute('name', 'credential');
-  script.type = 'application/ld+json';
-  script.innerHTML = JSON.stringify(credential, null, 2);
-  document.head.appendChild(script);
-  // set template as the new HTML body using "createContextualFragment" to
-  // ensure any scripts execute; a script in the template must call
-  // window.renderMethodReady() to indicate the rendering is ready
-  document.body.append(
-    document.createRange().createContextualFragment(template));
-}
-    </script>
-  </head>
-
-  <body>
-  </body>
-</html>
-`;

@@ -136,33 +136,37 @@ SPDX-License-Identifier: BSD-3-Clause
         const template = `
           <div>
             <script>
-              console.log('running template render script');
+              document.addEventListener('DOMContentLoaded', () => {
+                console.log('running template render script');
 
-              // display credential as JSON as an example renderer; anything
-              // could be done here instead, including mustache/other-style
-              // template processing to generate the HTML for display
-              const credential = JSON.parse(document.querySelector(
-                'head > script[name="credential"]').innerHTML);
-              const contentDiv = document.querySelector('#content');
-              const credentialAsString = JSON.stringify(credential, null, 2);
-              contentDiv.innerHTML = credentialAsString;
-              contentDiv.style.width = '100%';
-              contentDiv.style.height = credentialAsString.split('\\n').length - 1 + 'rem';
+                // display credential as JSON as an example renderer; anything
+                // could be done here instead, including mustache/other-style
+                // template processing to generate the HTML for display
+                const credential = JSON.parse(document.querySelector(
+                  'head > script[name="credential"]').innerHTML);
+                const contentDiv = document.querySelector('#content');
+                console.log('contentDiv el', contentDiv);
 
-              document.querySelector('#credentialSubject-name').innerText =
-                credential.credentialSubject.name;
-              document.querySelector('#issuer-name').innerText =
-                credential.issuer.name;
+                const credentialAsString = JSON.stringify(credential, null, 2);
+                contentDiv.innerHTML = credentialAsString;
+                contentDiv.style.width = '100%';
+                contentDiv.style.height = credentialAsString.split('\\n').length - 1 + 'rem';
 
-              // demonstrate blocked network access
-              fetch('./index.html').then(result => {
-                console.error('fetch not blocked', result);
-              }).catch(e => {
-                console.log('network access intentionally blocked', e);
+                document.querySelector('#credentialSubject-name').innerText =
+                  credential.credentialSubject.name;
+                document.querySelector('#issuer-name').innerText =
+                  credential.issuer.name;
+
+                // demonstrate blocked network access
+                fetch('./index.html').then(result => {
+                  console.error('fetch not blocked', result);
+                }).catch(e => {
+                  console.log('network access intentionally blocked', e);
+                });
+                setTimeout(() => {
+                  window.renderMethodReady()
+                }, ${useButton ? 2000 : 0});
               });
-              setTimeout(() => {
-                window.renderMethodReady()
-              }, ${useButton ? 2000 : 0});
             <\/script>
             <h1 id="credentialSubject-name"></h1>
             <p>Issued by: <span id="issuer-name"></span></p>
