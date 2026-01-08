@@ -1,0 +1,60 @@
+<html>
+  <head>
+    <meta http-equiv="content-security-policy" content="frame-src 'none'">
+  </head>
+  <body>
+    <iframe id="renderer" sandbox="allow-scripts allow-modals" srcdoc=""></iframe>
+
+    <script>
+      // the *partial* verifiable credential filtered by `renderProperty`
+      const credential = {
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          'https://www.w3.org/ns/credentials/examples/v2'
+        ],
+        type: ['VerifiableCredential', 'NameCredential'],
+        issuer: {
+          id: 'did:example:1234',
+          name: 'The Issuer',
+        },
+        credentialSubject: {
+          name: 'Example Name',
+        }
+      };
+
+      // template value extracted from the original VC
+      const template = `
+        <div>
+          <h1 id="credentialSubject-name"></h1>
+          <p>Issued by: <span id="issuer-name"></span></p>
+
+          <script>
+            console.log('running template render script');
+
+            // display credential as JSON as an example renderer; anything
+            // could be done here instead, including mustache/other-style
+            // template processing to generate the HTML for display
+            const credential = JSON.parse(document.querySelector(
+              'head > script[name="credential"]').innerHTML);
+
+            document.querySelector('#credentialSubject-name').innerText =
+              credential.credentialSubject.name;
+            document.querySelector('#issuer-name').innerText =
+              credential.issuer.name;
+          <\/script>
+        </div>
+      `;
+
+      // Setup the iframe shim code--required for security sandboxing
+      renderer.srcdoc = `
+        <html>
+        <head>
+          <meta http-equiv="content-security-policy" content="connect-src 'none'">
+          <script name="credential" type="application/vc">${JSON.stringify(credential)}<\/script>
+        </head>
+        <body>${template}</body>
+        </html>
+      `;
+    </script>
+  </body>
+</html>
