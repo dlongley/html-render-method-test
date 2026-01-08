@@ -1,3 +1,9 @@
+<!--
+Copyright 2026 Digital Bazaar, Inc.
+
+SPDX-License-Identifier: BSD-3-Clause
+-->
+
 # HTML Render Method testing
 
 The HTML [Render Method](https://w3c.github.io/vc-render-method/) approach uses

@@ -1,5 +1,7 @@
-/*!
- * Copyright (c) 2023-2026 Digital Bazaar, Inc. All rights reserved.
+/*
+ * Copyright 2026 Digital Bazaar, Inc.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 import {selectJsonLd} from './select.js';
 
