@@ -5,6 +5,8 @@
  */
 import {parsePointer} from './pointer.js';
 
+// this is the standard `selectJsonLd` algorithm from:
+// https://www.w3.org/TR/vc-di-ecdsa/#selectjsonld
 export function selectJsonLd({document, pointers, includeTypes = true} = {}) {
   if(!(document && typeof document === 'object')) {
     throw new TypeError('"document" must be an object.');
