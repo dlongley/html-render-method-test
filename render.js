@@ -55,14 +55,10 @@ export async function render({
           // the parent window
           const portPromise = new Promise(resolve => {
             window.addEventListener('message', function start(event) {
-              const {data: message, ports} = event;
-              const port = ports?.[0];
-              if(!(message === 'start' && port)) {
-                // ignore unknown message
-                return;
-              };
-              window.removeEventListener('message', start);
-              resolve(port);
+              if(event.data === 'start' && event.ports?.[0]) {
+                window.removeEventListener('message', start);
+                resolve(event.ports[0]);
+              }
             });
           });
 
