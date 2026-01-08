@@ -7,7 +7,7 @@ import {parsePointer} from './pointer.js';
 
 // this is the standard `selectJsonLd` algorithm from:
 // https://www.w3.org/TR/vc-di-ecdsa/#selectjsonld
-export function selectJsonLd({document, pointers, includeTypes = true} = {}) {
+export function selectJsonLd({document, pointers} = {}) {
   if(!(document && typeof document === 'object')) {
     throw new TypeError('"document" must be an object.');
   }
@@ -24,8 +24,7 @@ export function selectJsonLd({document, pointers, includeTypes = true} = {}) {
 
   // perform selection
   const selectionDocument = {'@context': structuredClone(document['@context'])};
-  _initSelection(
-    {selection: selectionDocument, source: document, includeTypes});
+  _initSelection({selection: selectionDocument, source: document});
   for(const pointer of pointers) {
     // parse pointer into individual paths
     const paths = parsePointer(pointer);
@@ -33,9 +32,7 @@ export function selectJsonLd({document, pointers, includeTypes = true} = {}) {
       // whole document selected
       return structuredClone(document);
     }
-    _selectPaths({
-      document, pointer, paths, selectionDocument, arrays, includeTypes
-    });
+    _selectPaths({document, pointer, paths, selectionDocument, arrays});
   }
 
   // make any sparse arrays dense
@@ -54,7 +51,7 @@ export function selectJsonLd({document, pointers, includeTypes = true} = {}) {
 }
 
 function _selectPaths({
-  document, pointer, paths, selectionDocument, arrays, includeTypes
+  document, pointer, paths, selectionDocument, arrays
 } = {}) {
   // make pointer path in selection document
   let parentValue = document;
@@ -79,7 +76,7 @@ function _selectPaths({
         selectedValue = [];
         arrays.push(selectedValue);
       } else {
-        selectedValue = _initSelection({source: value, includeTypes});
+        selectedValue = _initSelection({source: value});
       }
       selectedParent[path] = selectedValue;
     }
@@ -101,13 +98,13 @@ function _selectPaths({
   selectedParent[paths.at(-1)] = selectedValue;
 }
 
-function _initSelection({selection = {}, source, includeTypes}) {
+function _initSelection({selection = {}, source}) {
   // must include non-blank node IDs
   if(source.id && !source.id.startsWith('_:')) {
     selection.id = source.id;
   }
-  // include types if directed to do so
-  if(includeTypes && source.type) {
+  // always include types
+  if(source.type) {
     selection.type = source.type;
   }
   return selection;
