@@ -12,6 +12,10 @@ SPDX-License-Identifier: BSD-3-Clause
         display: flex;
         /* Optional: Adds space between the items */
         gap: 20px;
+
+        @media (width <= 1080px) {
+          flex-direction: column;
+        }
       }
 
       .column-item {
@@ -22,6 +26,28 @@ SPDX-License-Identifier: BSD-3-Clause
         background-color: #f0f0f0;
         border: 1px solid #ccc;
       }
+
+      .show {
+        display: block !important;
+      }
+
+      @media (width >= 1080px) {
+        .expander {
+          display: none;
+        }
+        .expand-content {
+          display: block;
+        }
+      }
+
+      @media (width <= 1080px) {
+        .expander {
+          display: block;
+        }
+        .expand-content {
+          display: none;
+        }
+      }
     </style>
     <script type="module">
       import {render} from './render.js';
@@ -29,24 +55,34 @@ SPDX-License-Identifier: BSD-3-Clause
       let useButton = false;
 
       document.addEventListener('DOMContentLoaded', () => {
-        const button = document.querySelector('#load');
+        // expand interface for raw/complete VC
+        const expandButton = document.querySelector('#expand-button');
+        expandButton.addEventListener('click', () => {
+          const content = document.querySelector('.expand-content');
+          if(content.classList.contains('show')) {
+            content.classList.remove('show');
+            expandButton.textContent = 'Show';
+          } else {
+            content.classList.add('show');
+            expandButton.textContent = 'Hide';
+          }
+        });
 
-        // skip button if specified
-        const searchParams = new URLSearchParams(window.location.search);
-        useButton = searchParams.get('button') !== 'false';
-        if(!useButton) {
-          button.style.display = 'none';
-          doRender().catch(() => {});
-          return;
-        }
-
-        // use button interface
+        const renderButton = document.querySelector('#render');
         const loading = document.querySelector('#loading');
-        button.addEventListener('click', () => {
-          button.style.display = 'none';
+        renderButton.addEventListener('click', () => {
+          renderButton.style.display = 'none';
           loading.style.display = 'block';
           doRender().catch(() => {});
         });
+
+        // render immediately if button=false is specified
+        const searchParams = new URLSearchParams(window.location.search);
+        useButton = searchParams.get('button') !== 'false';
+        if(!useButton) {
+          renderButton.style.display = 'none';
+          doRender().catch(() => {});
+        }
       });
 
       const credential = {
@@ -184,11 +220,16 @@ SPDX-License-Identifier: BSD-3-Clause
     <div class="flex-container">
       <div class="column-item">
         <h2>Raw/Complete Verifiable Credential</h2>
-        <p>
-          Below is the "raw" Credential data prior to being selectively disclosed
-          and rendered by the iframe (to the right):
-        </p>
-        <textarea id="fullCredential"></textarea>
+        <div class="expander">
+          <button id="expand-button">Show</button>
+        </div>
+        <div class="expand-content">
+          <p>
+            Below is the "raw" Credential data prior to being selectively disclosed
+            and rendered by the iframe (to the right):
+          </p>
+          <textarea id="fullCredential"></textarea>
+        </div>
       </div>
       <div class="column-item">
         <h2>Rendered Credential (in a restricted <code>iframe</code>)</h2>
@@ -199,7 +240,7 @@ SPDX-License-Identifier: BSD-3-Clause
         </p>
 
         <div id="display">
-          <button id="load">
+          <button id="render">
             Render
           </button>
           <div id="loading" style="display: none">
