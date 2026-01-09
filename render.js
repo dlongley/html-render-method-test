@@ -6,14 +6,20 @@
 import {selectJsonLd} from './select.js';
 
 // `template` is fully resolved / dereferenced
-// `renderMethodReady` is a listener that will be called when template is ready
-export async function render({
-  credential, renderProperty, template, renderMethodReady
-} = {}) {
+export async function render({credential, renderProperty, template} = {}) {
   // filter credential (selective disclosure)
   credential = selectJsonLd({
     document: credential,
     pointers: renderProperty ?? ['/']
+  });
+
+  // a promise that resolves when the rendering is ready (or rejects if it
+  // fails); can be used to show the display or an error instead
+  let resolveRender;
+  let rejectRender;
+  const readyPromise = new Promise((resolve, reject) => {
+    resolveRender = resolve;
+    rejectRender = reject;
   });
 
   // create iframe for sandboxed rendering
@@ -32,11 +38,12 @@ export async function render({
     channel.port1.start();
     // handle `ready` message
     channel.port1.onmessage = function ready(event) {
-      if(event.data !== 'ready') {
-        return;
+      if(event.data === 'ready') {
+        resolveRender();
+      } else {
+        rejectRender(new Error(event.data?.error?.message));
       }
       channel.port1.onmessage = undefined;
-      renderMethodReady?.();
     };
     // send "start" message; send `port2` to iframe for return communication
     iframe.contentWindow.postMessage('start', '*', [channel.port2]);
@@ -63,10 +70,11 @@ export async function render({
           });
 
           // attach a function to the window for the template to call when
-          // it's "ready" that will send a message to the parent so the
-          // parent can decide when to show the iframe
-          window.renderMethodReady = function() {
-            portPromise.then(port => port.postMessage('ready'));
+          // it's "ready" (or that an error occurred) that will send a message
+          // to the parent so the parent can decide whether to show the iframe
+          window.renderMethodReady = function(err) {
+            portPromise.then(port => port.postMessage(
+              !err ? 'ready' : {error: {message: err.message}}));
           };
         </script>
       </head>
@@ -75,5 +83,6 @@ export async function render({
         ${template}
       </body>
     </html>`;
-  return {iframe};
+
+  return {iframe, ready: readyPromise};
 }

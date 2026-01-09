@@ -191,16 +191,16 @@ SPDX-License-Identifier: BSD-3-Clause
             <\/script>
           </div>`;
 
-        const {iframe} = await render({
+        const {iframe, ready} = await render({
           credential,
           renderProperty: renderMethod.renderProperty,
-          template,
-          renderMethodReady() {
-            console.log('rendering ready');
-            const loading = document.querySelector('#loading');
-            loading.style.display = 'none';
-            iframe.style.display = 'block';
-          }
+          template
+        });
+        ready.then(() => {
+          console.log('rendering ready');
+          const loading = document.querySelector('#loading');
+          loading.style.display = 'none';
+          iframe.style.display = 'block';
         });
         const {style} = renderMethod.outputPreference;
         for(const key in style) {
