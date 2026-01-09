@@ -30,7 +30,7 @@ export async function render({credential, renderProperty, template} = {}) {
   // browsers will use the meta tag in the iframe HTML which does not appear
   // to be changeable by JavaScript once set (prevents change of the policy
   // by a template even if `iframe.csp` does not work)
-  iframe.setAttribute('csp', `default-src 'none' 'unsafe-inline'`);
+  iframe.setAttribute('csp', `default-src 'none' data: 'unsafe-inline'`);
   iframe.onload = () => {
     // create a MessageChannel; transfer one port to the iframe
     const channel = new MessageChannel();
@@ -55,7 +55,7 @@ export async function render({credential, renderProperty, template} = {}) {
       <head>
         <meta
           http-equiv="content-security-policy"
-          content="default-src 'none' 'unsafe-inline'">
+          content="default-src 'none' data: 'unsafe-inline'">
         <script
           name="credential"
           type="application/vc">${JSON.stringify(credential, null, 2)}</script>
